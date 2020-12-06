@@ -51,19 +51,19 @@ export default class CacheManager {
     await FileSystem.makeDirectoryAsync(BASE_DIR);
   }
 
-  static async clearCacheBefore(days: number):Promise<void>{
+  static async clearCacheBefore(days: number): Promise<void> {
     const daysInSeconds = days * 24 * 60 * 60;
     const currentDay = new Date().getTime() / 1000;
     const files = await FileSystem.readDirectoryAsync(BASE_DIR);
-    
-    for(const file in files){
-       const path = `${BASE_DIR}${file}`;
-       const { modificationTime } = await FileSystem.getInfoAsync(path);
-       if(modificationTime+daysInSeconds < currentDay){
-         await FileSystem.deleteAsync(path, { idempotent: true })
-       }
-    }
+    files.forEach(async file => {
+      const path = `${BASE_DIR}${file}`;
+      const { modificationTime } = await FileSystem.getInfoAsync(path);
+      if (modificationTime && modificationTime + daysInSeconds < currentDay) {
+        await FileSystem.deleteAsync(path, { idempotent: true });
+      }
+    });
   }
+
   static async getCacheSize(): Promise<number> {
     const result = await FileSystem.getInfoAsync(BASE_DIR);
     if (!result.exists) {
